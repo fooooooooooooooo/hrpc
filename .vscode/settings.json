@@ -1,0 +1,10 @@
+{
+  "rust-analyzer.linkedProjects": [
+    ".\\blehr\\Cargo.toml",
+    ".\\Cargo.toml",
+  ],
+  "rust-analyzer.rustfmt.extraArgs": [
+    "+nightly"
+  ],
+  "rust-analyzer.showUnlinkedFileNotification": false
+}

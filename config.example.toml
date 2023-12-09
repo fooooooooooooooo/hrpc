@@ -1,0 +1,40 @@
+# time is in ms
+
+read_timeout = 6000
+restart_delay = 2000
+scan_retry_delay = 2000
+scan_timeout = 10000
+
+[rpc]
+enable = true
+id = "000000000000000000"
+update_interval = 10000
+
+[rpc.templates]
+details = "aaaa"
+# vars: {reading}
+state = "{reading}"
+na_details = "details"
+na_state = "N/A"
+
+[osc]
+enable = true
+host = "127.0.0.1"
+port = 9000
+update_interval = 1000
+percent_min = 50
+percent_max = 160
+
+[log]
+enable = true
+update_interval = 10000
+# vars: {timestamp}, {reading}
+template = "{timestamp} {reading}"
+path = "log.txt"
+
+[file]
+enable = false
+update_interval = 1000
+# vars: {reading}
+template = "{reading}"
+path = "rate.txt"
