@@ -32,7 +32,11 @@ async fn log_task(config: Config) -> anyhow::Result<()> {
     template.add("reading", reading::get().to_string());
     template.add("timestamp", timestamp());
 
-    append(&config.log.path, format!("{}\n", template.render())).await?;
+    let rendered = template.render();
+
+    debug!("log_task writing `{rendered}`");
+
+    append(&config.log.path, format!("{rendered}\n")).await?;
   }
 }
 

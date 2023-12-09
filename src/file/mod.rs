@@ -33,7 +33,7 @@ async fn file_task(config: Config) -> anyhow::Result<()> {
 
     let rendered = template.render();
 
-    debug!("file_task writing: {}", rendered);
+    debug!("file_task writing `{}`", rendered);
 
     overwrite(&config.file.path, rendered).await?;
   }

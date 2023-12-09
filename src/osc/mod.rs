@@ -48,6 +48,8 @@ async fn osc_task(config: Config) -> anyhow::Result<()> {
 
   let addr = SocketAddr::new(host, config.osc.port);
 
+  info!("osc ready");
+
   loop {
     interval.tick().await;
 

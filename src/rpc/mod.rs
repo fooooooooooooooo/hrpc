@@ -36,6 +36,7 @@ async fn rpc_task(config: Config) -> anyhow::Result<()> {
 
   client.on_ready(|_| {
     READY.store(true, Ordering::Relaxed);
+    info!("rpc ready")
   });
 
   client.on_error(|err| {

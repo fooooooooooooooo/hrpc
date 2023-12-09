@@ -35,9 +35,17 @@ async fn monitor_task(config: &Config) -> anyhow::Result<()> {
 
   let mut stream = sensor.hr_stream().await?;
 
+  info!(
+    "connected to sensor: {}",
+    sensor.name().await.unwrap_or_else(|| "unknown name".to_string())
+  );
+
   // todo: what if it is none forever
   while let Ok(Some(reading)) = timeout(config.read_timeout, stream.next()).await {
-    debug!("reading: {:?}", reading);
+    debug!(
+      "reading `{}`",
+      reading.map(|x| x.to_string()).unwrap_or("None".to_owned())
+    );
 
     if let Some(reading) = reading {
       reading::set(reading);
@@ -65,7 +73,7 @@ async fn find_sensor(config: &Config) -> anyhow::Result<Sensor> {
       return Ok(sensor);
     }
 
-    debug!("no sensor found, retrying in {}ms", config.scan_retry_delay.as_millis());
+    warn!("no sensor found, retrying in {}ms", config.scan_retry_delay.as_millis());
     sleep(config.scan_retry_delay).await;
   }
 }
