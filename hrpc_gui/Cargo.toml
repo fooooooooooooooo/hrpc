@@ -1,0 +1,13 @@
+[package]
+name = "hrpc_gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow.workspace = true
+eframe.workspace = true
+log.workspace = true
+pretty_env_logger.workspace = true
+hrpc.workspace = true
+egui.workspace = true
+egui_plot.workspace = true

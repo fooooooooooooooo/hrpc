@@ -1,17 +1,12 @@
-[package]
-name = "hrpc"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = ["hrpc", "hrpc_gui", "blehr"]
 
-[dependencies]
+[workspace.dependencies]
 anyhow = "1.0.75"
-blehr = { path = "./blehr" }
-chrono = { version = "0.4.31", default-features = false, features = ["alloc", "std", "clock"] }
-discord-rpc-client = "0.4.0"
-futures-lite = "2.1.0"
+eframe = "0.24.1"
 log = "0.4.20"
 pretty_env_logger = "0.5.0"
-rosc = "0.10.1"
-serde = { version = "1.0.193", features = ["serde_derive"] }
-tokio = { version = "1.35.0", features = ["full"] }
-toml = "0.8.8"
+hrpc = { path = "hrpc" }
+egui = "0.24.1"
+egui_plot = "0.24.1"
