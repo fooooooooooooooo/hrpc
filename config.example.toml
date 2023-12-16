@@ -27,6 +27,7 @@ percent_max = 160
 
 [log]
 enable = true
+write_zero = false
 update_interval = 10000
 # vars: {timestamp}, {reading}
 template = "{timestamp} {reading}"

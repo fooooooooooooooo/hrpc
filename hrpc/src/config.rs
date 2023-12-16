@@ -50,6 +50,7 @@ pub struct OscConfig {
 #[derive(Deserialize, Clone, Debug)]
 pub struct LogConfig {
   pub enable: bool,
+  pub write_zero: bool,
   #[serde(deserialize_with = "from_millis")]
   pub update_interval: Duration,
   pub template: String,

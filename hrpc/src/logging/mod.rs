@@ -28,8 +28,14 @@ async fn log_task(config: Config) -> anyhow::Result<()> {
   loop {
     interval.tick().await;
 
+    let reading = reading::get();
+
+    if !config.log.write_zero && reading == 0 {
+      continue;
+    }
+
     let mut template = Template::new(config.log.template.clone());
-    template.add("reading", reading::get().to_string());
+    template.add("reading", reading.to_string());
     template.add("timestamp", timestamp());
 
     let rendered = template.render();
