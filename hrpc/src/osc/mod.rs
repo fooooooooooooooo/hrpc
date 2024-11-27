@@ -55,6 +55,8 @@ async fn osc_task(config: Config) -> anyhow::Result<()> {
 
     let reading = reading::get();
 
+    let reading = reading.as_u8();
+
     send_ints(&socket, addr, reading).await?;
     send_float(&socket, addr, reading).await?;
     send_percent(&socket, addr, reading, config.osc.percent_min, config.osc.percent_max).await?;

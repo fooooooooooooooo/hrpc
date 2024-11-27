@@ -1,5 +1,5 @@
 /target
 
 config.toml
-log.txt
+log*.txt
 rate.txt

@@ -25,11 +25,19 @@ async fn file_task(config: Config) -> anyhow::Result<()> {
 
   let mut interval = interval(config.file.update_interval);
 
+  let mut last_reading = 0;
+
   loop {
     interval.tick().await;
 
+    let reading = reading::get().as_u8();
+    if reading == last_reading {
+      continue;
+    }
+    last_reading = reading;
+
     let mut template = Template::new(config.file.template.clone());
-    template.add("reading", reading::get().to_string());
+    template.add("reading", reading.to_string());
 
     let rendered = template.render();
 

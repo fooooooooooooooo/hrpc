@@ -3,10 +3,10 @@ resolver = "2"
 members = ["hrpc", "hrpc_gui", "blehr"]
 
 [workspace.dependencies]
-anyhow = "1.0.75"
-eframe = "0.24.1"
+anyhow = "1"
+eframe = "0.29.1"
 log = "0.4.20"
 pretty_env_logger = "0.5.0"
 hrpc = { path = "hrpc" }
-egui = "0.24.1"
-egui_plot = "0.24.1"
+egui = "0.29.1"
+egui_plot = "0.29.0"

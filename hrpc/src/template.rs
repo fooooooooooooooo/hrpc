@@ -13,7 +13,9 @@ impl Template {
     }
   }
 
-  pub fn add(&mut self, key: &'static str, value: String) { self.variables.insert(key, value); }
+  pub fn add(&mut self, key: &'static str, value: String) {
+    self.variables.insert(key, value);
+  }
 
   pub fn render(&self) -> String {
     let mut rendered = self.template.clone();

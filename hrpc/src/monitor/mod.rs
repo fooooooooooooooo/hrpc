@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 use tokio::time::{sleep, timeout};
 
 use crate::config::Config;
-use crate::reading;
+use crate::reading::{self, Reading};
 
 pub fn monitor_thread(config: Config) -> anyhow::Result<()> {
   tokio::task::block_in_place(|| {
@@ -27,7 +27,7 @@ async fn monitor_loop(config: &Config) {
       sleep(config.restart_delay).await;
     }
 
-    reading::set(reading::NONE);
+    reading::set(Reading::None);
   }
 }
 
@@ -44,6 +44,7 @@ async fn monitor_task(config: &Config) -> anyhow::Result<()> {
   );
 
   let mut last_reading_time = Instant::now();
+  let mut freeze_time: Option<Instant> = None;
 
   loop {
     let reading = timeout(config.read_timeout, stream.next()).await?;
@@ -64,10 +65,26 @@ async fn monitor_task(config: &Config) -> anyhow::Result<()> {
       reading.map(|x| x.to_string()).unwrap_or("None".to_owned())
     );
 
-    if let Some(reading) = reading {
-      reading::set(reading);
+    if config.monitor.freeze_last_value {
+      if reading.is_some() && reading.unwrap() != 0 {
+        freeze_time = None;
+
+        if let Some(value) = reading {
+          reading::set(Reading::Value(value));
+        } else if let Reading::Value(value) = reading::get() {
+          reading::set(Reading::Frozen(value))
+        }
+      } else if freeze_time.is_none() {
+        freeze_time = Some(Instant::now());
+      } else if let Some(timeout) = config.monitor.freeze_timeout {
+        if freeze_time.unwrap().elapsed() > timeout {
+          reading::set(Reading::None);
+        }
+      }
+    } else if let Some(value) = reading {
+      reading::set(Reading::Value(value));
     } else {
-      reading::set(reading::NONE);
+      reading::set(Reading::None);
     }
 
     last_reading_time = Instant::now();
@@ -76,12 +93,12 @@ async fn monitor_task(config: &Config) -> anyhow::Result<()> {
 
 async fn find_sensor(config: &Config) -> anyhow::Result<Sensor> {
   debug!("scanning for sensors");
-  let mut scanner = Scanner::new();
-  scanner.start().await?;
+
+  let mut scanner = Scanner::new().await?.find_adapter().await?;
 
   loop {
-    let sensor = timeout(config.scan_timeout, scanner.next_sensor()).await??;
-    // let sensor = scanner.next_sensor().await?;
+    scanner.start().await?;
+    let sensor = scanner.next_sensor().await?;
     scanner.stop().await?;
 
     if let Some(sensor) = sensor {
@@ -90,20 +107,8 @@ async fn find_sensor(config: &Config) -> anyhow::Result<Sensor> {
       return Ok(sensor);
     }
 
-    // if let Some(sensor) = scanner.device_stream().next().await {
-    //   let name = sensor.local_name().await.unwrap_or_else(|| "unknown
-    // name".to_string());   debug!("found sensor: {name}");
-
-    //   match Sensor::from_device(sensor).await {
-    //     Ok(sensor) => return Ok(sensor),
-    //     Err(e) => {
-    //       warn!("sensor does not have compatible characteristic: {}", e);
-    //       continue;
-    //     }
-    //   }
-    // }
-
     warn!("no sensor found, retrying in {}ms", config.scan_retry_delay.as_millis());
+
     sleep(config.scan_retry_delay).await;
   }
 }

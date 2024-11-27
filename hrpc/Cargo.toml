@@ -6,12 +6,12 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 blehr = { path = "../blehr" }
-chrono = { version = "0.4.31", default-features = false, features = ["alloc", "std", "clock"] }
-discord-rpc-client = "0.4.0"
-futures-lite = "2.1.0"
+chrono = { version = "0.4.38", default-features = false, features = ["alloc", "std", "clock"] }
+discord-rich-presence = "0.2.5"
+futures-lite = "2.5.0"
 log.workspace = true
 pretty_env_logger.workspace = true
 rosc = "0.10.1"
 serde = { version = "1", features = ["serde_derive"] }
-tokio = { version = "1.35", features = ["full"] }
-toml = "0.8.8"
+tokio = { version = "1.41", features = ["full"] }
+toml = "0.8.19"

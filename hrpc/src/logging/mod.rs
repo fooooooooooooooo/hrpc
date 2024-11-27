@@ -30,12 +30,18 @@ async fn log_task(config: Config) -> anyhow::Result<()> {
 
     let reading = reading::get();
 
-    if !config.log.write_zero && reading == 0 {
+    if !config.log.write_zero && reading.is_none() {
       continue;
     }
 
-    let mut template = Template::new(config.log.template.clone());
-    template.add("reading", reading.to_string());
+    let template = match reading {
+      reading::Reading::None => config.log.templates.disconnected_template.clone(),
+      reading::Reading::Frozen(_) => config.log.templates.frozen_template.clone(),
+      reading::Reading::Value(_) => config.log.templates.template.clone(),
+    };
+
+    let mut template = Template::new(template);
+    template.add("reading", reading.as_u8().to_string());
     template.add("timestamp", timestamp());
 
     let rendered = template.render();
@@ -47,4 +53,6 @@ async fn log_task(config: Config) -> anyhow::Result<()> {
 }
 
 /// `1985-04-12T23:20:50`
-fn timestamp() -> String { chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string() }
+fn timestamp() -> String {
+  chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string()
+}

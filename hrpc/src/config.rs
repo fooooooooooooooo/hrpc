@@ -12,6 +12,7 @@ pub struct Config {
   pub scan_retry_delay: Duration,
   #[serde(deserialize_with = "from_millis")]
   pub scan_timeout: Duration,
+  pub monitor: MonitorConfig,
   pub rpc: RpcConfig,
   pub osc: OscConfig,
   pub log: LogConfig,
@@ -19,10 +20,16 @@ pub struct Config {
 }
 
 #[derive(Deserialize, Clone, Debug)]
+pub struct MonitorConfig {
+  pub freeze_last_value: bool,
+  #[serde(deserialize_with = "from_millis_optional")]
+  pub freeze_timeout: Option<Duration>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
 pub struct RpcConfig {
   pub enable: bool,
-  #[serde(deserialize_with = "from_string")]
-  pub id: u64,
+  pub id: String,
   #[serde(deserialize_with = "from_millis")]
   pub update_interval: Duration,
   pub templates: RpcTemplates,
@@ -32,8 +39,10 @@ pub struct RpcConfig {
 pub struct RpcTemplates {
   pub details: String,
   pub state: String,
-  pub na_details: String,
-  pub na_state: String,
+  pub frozen_details: String,
+  pub frozen_state: String,
+  pub disconnected_details: String,
+  pub disconnected_state: String,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -53,8 +62,15 @@ pub struct LogConfig {
   pub write_zero: bool,
   #[serde(deserialize_with = "from_millis")]
   pub update_interval: Duration,
-  pub template: String,
   pub path: String,
+  pub templates: LogTemplates,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct LogTemplates {
+  pub template: String,
+  pub frozen_template: String,
+  pub disconnected_template: String,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -71,35 +87,32 @@ where D: serde::Deserializer<'de> {
   Ok(Duration::from_millis(Deserialize::deserialize(deserializer)?))
 }
 
-fn from_string<'de, D>(deserializer: D) -> Result<u64, D::Error>
+fn from_millis_optional<'de, D>(deserializer: D) -> Result<Option<Duration>, D::Error>
 where D: serde::Deserializer<'de> {
-  deserializer.deserialize_any(StringOrNumberVisitor)
-}
+  let millis = Deserialize::deserialize(deserializer)?;
 
-struct StringOrNumberVisitor;
-
-impl<'de> serde::de::Visitor<'de> for StringOrNumberVisitor {
-  type Value = u64;
-
-  fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-    formatter.write_str("string or number")
-  }
-
-  fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-  where E: serde::de::Error {
-    value.parse().map_err(serde::de::Error::custom)
-  }
-
-  fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-  where E: serde::de::Error {
-    Ok(value)
+  if millis == 0 {
+    Ok(None)
+  } else {
+    Ok(Some(Duration::from_millis(millis)))
   }
 }
 
 const CONFIG_PATH: &str = "config.toml";
 
+const DEFAULT_CONFIG: &str = include_str!("../../config.example.toml");
+
 pub fn load_config() -> anyhow::Result<Config> {
-  let data = std::fs::read_to_string(CONFIG_PATH)?;
+  let data = match std::fs::read_to_string(CONFIG_PATH) {
+    Ok(data) => data,
+    Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+      // write default config
+      std::fs::write(CONFIG_PATH, DEFAULT_CONFIG)?;
+      warn!("config.toml not found, created with default values");
+      DEFAULT_CONFIG.to_string()
+    }
+    Err(err) => return Err(err.into()),
+  };
 
   Ok(toml::from_str(&data)?)
 }

@@ -5,6 +5,14 @@ restart_delay = 2000
 scan_retry_delay = 2000
 scan_timeout = 10000
 
+[monitor]
+# if monitor loses connection or fails to read,
+# use the last valid reading
+freeze_last_value = false
+# time to return to 0 after freeze
+# 0 to keep last value forever
+freeze_timeout = 10000
+
 [rpc]
 enable = true
 id = "000000000000000000"
